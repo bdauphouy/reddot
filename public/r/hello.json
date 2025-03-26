@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hello",
+  "type": "registry:ui",
+  "title": "Hello",
+  "description": "A simple Hello component",
+  "files": [
+    {
+      "path": "registry/ui/hello.tsx",
+      "content": "export function Hello() {\n  return (\n    <div>\n      <h1>Hello</h1>\n      <p>This is a simple Hello component.</p>\n    </div>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/hello.tsx"
+    }
+  ]
+}

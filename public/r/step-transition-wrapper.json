@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "step-transition-wrapper",
+  "type": "registry:block",
+  "dependencies": [
+    "motion"
+  ],
+  "files": [
+    {
+      "path": "registry/blocks/step-transition-wrapper.tsx",
+      "content": "\"use client\";\n\nimport { motion } from \"motion/react\";\nimport { PropsWithChildren } from \"react\";\n\nexport function StepTransitionWrapper({\n  children,\n}: Readonly<PropsWithChildren>) {\n  return (\n    <motion.div\n      className=\"flex w-full flex-col items-center\"\n      initial={{ x: 100, opacity: 0 }}\n      animate={{ x: 0, opacity: 1 }}\n    >\n      {children}\n    </motion.div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/step-transition-wrapper.tsx"
+    }
+  ]
+}

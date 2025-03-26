@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "cookie-banner",
+  "type": "registry:block",
+  "title": "Cookie banner",
+  "description": "A simple Cookie banner block",
+  "files": [
+    {
+      "path": "registry/blocks/cookie-banner/index.tsx",
+      "content": "export function CookieBanner() {\n  return <div>cookie banner</div>;\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/cookie-banner/index.tsx"
+    }
+  ]
+}

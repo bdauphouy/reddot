@@ -1,0 +1,54 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "review",
+  "type": "registry:block",
+  "registryDependencies": [
+    "https://reddot.dotworld.ch/registry/step-transition-wrapper",
+    "https://reddot.dotworld.ch/registry/dialog",
+    "https://reddot.dotworld.ch/registry/button"
+  ],
+  "files": [
+    {
+      "path": "registry/blocks/review/index.tsx",
+      "content": "\"use client\";\n\nimport { Dialog, DialogContent, DialogTitle } from \"@/registry/ui/dialog\";\nimport { useCallback, useState } from \"react\";\nimport { Experience } from \"./components/experience\";\nimport { Improve } from \"./components/improve\";\nimport { Thanks } from \"./components/thanks\";\nimport { ReviewContextProvider } from \"./review-context-provider\";\nimport { Comment, Texts } from \"./types\";\n\ninterface Props {\n  texts: Texts;\n  onOpenChange?: (open: boolean) => void;\n  onGood?: () => void;\n  onDontAskAgain?: () => void;\n  onComment?: (comment: Comment) => void;\n}\n\nexport function Review({\n  texts,\n  onOpenChange = () => {},\n  onGood = () => {},\n  onDontAskAgain = () => {},\n  onComment = () => {},\n}: Readonly<Props>) {\n  const [currentStep, setCurrentStep] = useState(\"experience\");\n\n  const renderCurrentStep = useCallback(() => {\n    switch (currentStep) {\n      case \"experience\":\n        return (\n          <Experience\n            onGood={onGood}\n            onDontAskAgain={onDontAskAgain}\n            next={(isGood: boolean) =>\n              setCurrentStep(isGood ? \"thanks\" : \"improve\")\n            }\n          />\n        );\n      case \"improve\":\n        return (\n          <Improve\n            onComment={onComment}\n            next={() => setCurrentStep(\"thanks\")}\n          />\n        );\n      case \"thanks\":\n        return <Thanks />;\n      default:\n        return <></>;\n    }\n  }, [currentStep]);\n\n  return (\n    <Dialog defaultOpen onOpenChange={onOpenChange}>\n      <DialogTitle className=\"sr-only\">Review</DialogTitle>\n      <DialogContent className=\"w-[calc(100%-32px)] overflow-hidden pt-12 md:max-w-xl\">\n        <ReviewContextProvider texts={texts}>\n          {renderCurrentStep()}\n        </ReviewContextProvider>\n      </DialogContent>\n    </Dialog>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/index.tsx"
+    },
+    {
+      "path": "registry/blocks/review/review-context-provider.tsx",
+      "content": "\"use client\";\n\nimport {\n  createContext,\n  Dispatch,\n  PropsWithChildren,\n  SetStateAction,\n  useContext,\n  useMemo,\n  useState,\n} from \"react\";\nimport { Rating, Texts } from \"./types\";\n\ninterface ReviewContextValue {\n  texts: Texts;\n  rating: Rating | null;\n  setRating: Dispatch<SetStateAction<ReviewContextValue[\"rating\"]>>;\n}\n\nconst defaultTexts: Texts = {\n  experience: {\n    title: \"How do you rate your experience?\",\n    description:\n      \"Your feedback is important to us. Please take a moment to rate your experience.\",\n    good: \"Good\",\n    average: \"Average\",\n    bad: \"Bad\",\n    dontAskAgain: \"Don't ask me again\",\n  },\n  improve: {\n    title: \"What could have improved your experience?\",\n    label: \"Share your suggestions to help us improve\",\n    placeholder: \"Type your message...\",\n    cta: \"Send message\",\n  },\n  thanks: {\n    title: \"Thank you for your review!\",\n    description:\n      \"We deeply appreciate the time you took to share your experience with us.\",\n  },\n};\n\nexport const ReviewContext = createContext<ReviewContextValue>({\n  texts: defaultTexts,\n  rating: null,\n  setRating: () => {},\n});\n\ninterface Props extends PropsWithChildren {\n  texts?: Texts;\n}\n\nexport function ReviewContextProvider({\n  texts = defaultTexts,\n  children,\n}: Readonly<Props>) {\n  const [rating, setRating] = useState<ReviewContextValue[\"rating\"]>(null);\n  const value = useMemo(() => ({ rating, texts, setRating }), [rating]);\n\n  return (\n    <ReviewContext.Provider value={value}>{children}</ReviewContext.Provider>\n  );\n}\n\nexport const useReview = () => useContext(ReviewContext);\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/review-context-provider.tsx"
+    },
+    {
+      "path": "registry/blocks/review/components/thanks.tsx",
+      "content": "import Image from \"next/image\";\nimport { StepTransitionWrapper } from \"../../step-transition-wrapper\";\nimport { useReview } from \"../review-context-provider\";\n\nexport function Thanks() {\n  const { texts } = useReview();\n\n  return (\n    <StepTransitionWrapper>\n      <div>\n        <div className=\"relative aspect-video\">\n          <Image src=\"/images/review/thanks.svg\" layout=\"fill\" alt=\"Thanks\" />\n        </div>\n        <h3 className=\"text-center text-2xl font-semibold\">\n          {texts.thanks.title}\n        </h3>\n        <p className=\"mt-5 text-center text-slate-600\">\n          {texts.thanks.description}\n        </p>\n      </div>\n    </StepTransitionWrapper>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/components/thanks.tsx"
+    },
+    {
+      "path": "registry/blocks/review/components/experience/index.tsx",
+      "content": "\"use client\";\n\nimport { DialogClose } from \"@/registry/ui/dialog\";\nimport { useCallback } from \"react\";\nimport { useReview } from \"../../review-context-provider\";\nimport { Rating } from \"../../types\";\nimport { EmojiCard } from \"./components/emoji-card\";\n\ninterface Props {\n  next: (isGood: boolean) => void;\n  onGood: () => void;\n  onDontAskAgain: () => void;\n}\n\nexport function Experience({ next, onGood, onDontAskAgain }: Readonly<Props>) {\n  const { setRating, texts } = useReview();\n\n  const handleClick = useCallback(async (emoji: Rating) => {\n    setRating(emoji);\n\n    switch (emoji) {\n      case \"bad\":\n        next(false);\n        break;\n      case \"average\":\n        next(false);\n        break;\n      case \"good\":\n        onGood();\n        next(true);\n        break;\n    }\n  }, []);\n\n  return (\n    <div className=\"space-y-5\">\n      <h3 className=\"text-center text-2xl font-semibold\">\n        {texts.experience.title}\n      </h3>\n      <p className=\"text-center text-slate-600\">\n        {texts.experience.description}\n      </p>\n      <div className=\"flex gap-2 sm:gap-4\">\n        <EmojiCard\n          emoji=\"bad\"\n          title={texts.experience.bad}\n          onClick={handleClick}\n        />\n        <EmojiCard\n          emoji=\"average\"\n          title={texts.experience.average}\n          onClick={handleClick}\n        />\n        <EmojiCard\n          emoji=\"good\"\n          title={texts.experience.good}\n          onClick={handleClick}\n        />\n      </div>\n      <DialogClose className=\"mx-auto block\" asChild>\n        <button\n          className=\"text-center text-sm text-slate-600 underline\"\n          onClick={onDontAskAgain}\n        >\n          {texts.experience.dontAskAgain}\n        </button>\n      </DialogClose>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/components/experience/index.tsx"
+    },
+    {
+      "path": "registry/blocks/review/components/experience/components/emoji-card.tsx",
+      "content": "import Image from \"next/image\";\nimport { Rating } from \"../../../types\";\n\ninterface Props {\n  title: string;\n  emoji: Rating;\n  onClick: (emoji: Props[\"emoji\"]) => void;\n}\n\nexport function EmojiCard({ title, emoji, onClick }: Readonly<Props>) {\n  return (\n    <button\n      onClick={() => onClick(emoji)}\n      autoFocus={emoji === \"good\"}\n      className=\"flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-slate-100 p-3 outline-none transition-colors duration-300 hover:bg-slate-200 focus-visible:bg-slate-200\"\n    >\n      <Image\n        src={`/images/review/${emoji}.svg`}\n        className=\"size-8 sm:size-12 md:size-20\"\n        width={80}\n        height={80}\n        alt={title}\n      />\n      <span className=\"text-sm font-medium sm:text-base md:text-lg\">\n        {title}\n      </span>\n    </button>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/components/experience/components/emoji-card.tsx"
+    },
+    {
+      "path": "registry/blocks/review/components/improve/index.tsx",
+      "content": "\"use client\";\n\nimport { StepTransitionWrapper } from \"@/registry/blocks/step-transition-wrapper\";\nimport { Button } from \"@/registry/ui/button\";\nimport { FormEvent } from \"react\";\nimport { useReview } from \"../../review-context-provider\";\nimport { Comment } from \"../../types\";\n\ninterface Props {\n  next: () => void;\n  onComment: (comment: Comment) => void;\n}\n\nexport function Improve({ next, onComment }: Readonly<Props>) {\n  const { rating, texts } = useReview();\n\n  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {\n    onComment({\n      message: (e.target as unknown as HTMLTextAreaElement[])[0].value,\n      rating,\n    });\n    next();\n  };\n\n  return (\n    <StepTransitionWrapper>\n      <div className=\"flex flex-col gap-5\">\n        <h3 className=\"text-center text-2xl font-semibold\">\n          {texts.improve.title}\n        </h3>\n        <form onSubmit={handleSubmit} className=\"flex flex-col gap-2\">\n          <label htmlFor=\"message\" className=\"text-sm font-medium\">\n            {texts.improve.label}\n          </label>\n          <textarea\n            className=\"h-40 resize-none rounded-lg border border-slate-100 px-4 py-3 outline-none\"\n            name=\"message\"\n            id=\"message\"\n            placeholder={texts.improve.placeholder}\n          ></textarea>\n          <Button className=\"mt-4 self-end\">{texts.improve.cta}</Button>\n        </form>\n      </div>\n    </StepTransitionWrapper>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/blocks/review/components/improve/index.tsx"
+    },
+    {
+      "path": "registry/blocks/review/types/index.ts",
+      "content": "export type Rating = \"bad\" | \"average\" | \"good\";\n\nexport type Comment = { message: string; rating: Rating | null };\n\nexport interface Texts {\n  experience: {\n    title: string;\n    description: string;\n    good: string;\n    average: string;\n    bad: string;\n    dontAskAgain: string;\n  };\n  improve: {\n    title: string;\n    label: string;\n    placeholder: string;\n    cta: string;\n  };\n  thanks: {\n    title: string;\n    description: string;\n  };\n}\n",
+      "type": "registry:lib",
+      "target": "components/blocks/review/types/index.ts"
+    }
+  ]
+}
