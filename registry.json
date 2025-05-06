@@ -573,6 +573,16 @@
       ]
     },
     {
+      "name": "test",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "registry/ui/test.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "textarea",
       "type": "registry:ui",
       "files": [
